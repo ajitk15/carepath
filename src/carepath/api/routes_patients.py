@@ -2,6 +2,8 @@
 
 from fastapi import APIRouter, Depends, Query
 
+from ..config import settings
+from ..errors import Invalid
 from ..schemas import PatientIn, PatientOut, RiskOut
 from ..security.auth import Principal
 from ..security.rbac import Permission
@@ -29,6 +31,8 @@ def search_patients(
     principal: Principal = Depends(require(Permission.PATIENT_READ)),
 ) -> list[dict]:
     """Find patients by family name. FR-03."""
+    if limit > settings.max_page_size:
+        raise Invalid(f"limit must not exceed {settings.max_page_size}")
     return patients.search(connection, principal, family_name, limit)
 
 
