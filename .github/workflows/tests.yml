@@ -1,0 +1,32 @@
+# The tests, run by GitHub on every push and pull request.
+#
+# Digital Brain opens changes here as draft pull requests and writes the tests
+# that should prove them, but it deliberately never runs anything: it holds
+# knowledge about this service, not a checkout of it. Running them is this
+# workflow's job, in GitHub's sandbox, exactly as for any other contributor.
+name: tests
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e . pytest httpx ruff coverage
+      - name: Lint
+        run: ruff check src tests
+      - name: Test
+        run: pytest -q
