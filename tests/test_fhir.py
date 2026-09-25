@@ -78,7 +78,8 @@ class TestBundle:
 
 
 class TestApi:
-    def test_a_partner_may_export(self, client, patient):
+    def test_a_partner_may_export(self, client, patient, monkeypatch):
+        monkeypatch.setattr("carepath.services.consent.current", lambda *a, **k: True)
         response = client.get(
             f"/fhir/Patient/{patient['id']}/$everything", headers=PARTNER
         )
