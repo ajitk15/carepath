@@ -5,6 +5,12 @@ Patient, the Encounters, and the Observations recorded during them. The shapes
 follow FHIR R4; the profile claims are deliberately modest, because asserting US
 Core conformance means passing the US Core validator and release 1.0 does not
 run it. See `docs/02-design/adr/0004-fhir-profile-scope.md`.
+
+The exported Patient resource carries only what a receiving system needs to
+match and treat the same person: an identifier, a name, and a birth date.
+Telephone and postal code are withheld - they are not needed for that purpose,
+and every partner an export reaches is a place that data can then leak from, so
+the minimum-necessary principle asks that we not ship them.
 """
 
 import sqlite3
@@ -25,7 +31,13 @@ ENCOUNTER_CLASS = {
 
 
 def patient_resource(patient: dict) -> dict:
-    """One FHIR Patient resource."""
+    """One FHIR Patient resource, restricted to the minimum necessary.
+
+    No telephone and no postal code: an export is for continuity of care
+    between systems that already hold their own contact details for the
+    patient, not a directory service, so those fields are left out rather than
+    forwarded to whichever partner happens to be on the other end.
+    """
     return {
         "resourceType": "Patient",
         "id": patient["id"],
@@ -38,12 +50,7 @@ def patient_resource(patient: dict) -> dict:
             }
         ],
         "birthDate": patient["birth_date"],
-        "telecom": (
-            [{"system": "phone", "value": patient["phone"], "use": "home"}]
-            if patient["phone"]
-            else []
-        ),
-        "address": [{"postalCode": patient["postal_code"]}],
+        "telecom": [],
     }
 
 
