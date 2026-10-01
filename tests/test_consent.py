@@ -55,6 +55,18 @@ class TestCurrentPosition:
             )
         assert len(consent.history(connection, patient["id"], 50)) == 3
 
+    def test_a_withdrawn_then_regranted_decision_is_currently_granted(
+        self, connection, principal, patient
+    ):
+        for granted in (True, False, True):
+            consent.record_decision(
+                connection,
+                principal,
+                patient["id"],
+                ConsentIn(purpose="research", granted=granted),
+            )
+        assert consent.current(connection, patient["id"], "research") is True
+
 
 class TestApi:
     def test_a_coordinator_records_a_decision_and_reads_it_back(self, client, patient):
